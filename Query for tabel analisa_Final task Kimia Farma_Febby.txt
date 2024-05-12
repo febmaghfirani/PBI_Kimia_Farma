@@ -1,0 +1,44 @@
+﻿Melakukan 2 kali query untuk membuat tabel analisa yang mana :
+1. Query pertama
+CREATE TABLE skilled-curve-418213.kimia_farma.kf_data_mart AS
+SELECT
+   transaction_id,
+   date_trx,
+   trx.branch_id,
+   branch_name,
+   kota,
+   provinsi,
+   rating_cabang,
+   customer_name,
+   trx.product_id,
+   product_name,
+   trx.price,
+   discount_percentage,
+   CASE
+       WHEN trx.price <= 50000 THEN 0.1
+       WHEN trx.price <= 100000 THEN 0.15
+       WHEN trx.price <= 300000 THEN 0.2
+       WHEN trx.price <= 500000 THEN 0.25
+       ELSE 0.3
+   END AS persentase_gross_laba,
+   (trx.price - (trx.price * discount_percentage)) AS nett_sales,
+
+
+FROM
+   skilled-curve-418213.kimia_farma.kf_final_transaction as trx
+   Left JOIN skilled-curve-418213.kimia_farma.kf_kantor_cabang as cbg ON trx.branch_id = cbg.branch_id
+   Left JOIN skilled-curve-418213.kimia_farma.kf_product as prod ON trx.product_id = prod.product_id
+order by 2
+
+
+2. Query kedua
+CREATE TABLE skilled-curve-418213.kimia_farma.kf_tabel_analisa AS
+SELECT
+ db.*,
+   (nett_sales - (db.price - (db.price * persentase_gross_laba))) AS nett_profit,
+   rating_transaksi
+
+
+FROM
+   skilled-curve-418213.kimia_farma.kf_data_mart as db
+   Left JOIN skilled-curve-418213.kimia_farma.kf_final_transaction as trx ON db.transaction_id = trx.transaction_id
